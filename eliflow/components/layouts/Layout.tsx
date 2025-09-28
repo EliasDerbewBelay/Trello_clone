@@ -8,7 +8,7 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
-    <div>
+    <div className="bg-slate-200">
       <Header />
       <main>{children}</main>
       <Footer />

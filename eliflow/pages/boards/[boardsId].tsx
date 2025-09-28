@@ -1,14 +1,16 @@
+import AddNewCardForm from "@/components/Forms/AddNewCardForm";
+import AddListForm from "@/components/Forms/AddListForm";
+
 import { useRouter } from "next/router";
 import { useState } from "react";
 
 type Card = { id: string; title: string };
 type List = { id: string; title: string; cards: Card[] };
 
-const BoardPage = () => {
+const BoardPage: React.FC = () => {
   const router = useRouter();
   const { boardId } = router.query;
 
-  // Mock lists & cards
   const [lists, setLists] = useState<List[]>([
     {
       id: "1",
@@ -27,6 +29,32 @@ const BoardPage = () => {
     },
   ]);
 
+  const handleAddCard = (title: string) => {
+    const newList: List = {
+      id: Date.now().toString(),
+      title,
+      cards: [],
+    };
+
+    setLists([...lists, newList]);
+  };
+
+  const handleAddList = (listId: string, cardTitle: string) => {
+    setLists((prevLists) =>
+      prevLists.map((list) =>
+        list.id === listId
+          ? {
+              ...list,
+              cards: [
+                ...list.cards,
+                { id: Date.now().toString(), title: cardTitle },
+              ],
+            }
+          : list
+      )
+    );
+  };
+
   return (
     <div className="p-6 min-h-screen">
       <h2 className="text-2xl font-bold mb-6">Board {boardId}</h2>
@@ -41,19 +69,19 @@ const BoardPage = () => {
               {list.cards.map((card) => (
                 <div
                   key={card.id}
-                  className="bg-white p-3 rounded shadow hover:shadow-md cursor-pointer"
+                  className="bg-white p-3 rounded shadow hover:shadow-md cursor-pointer flex flex-col gap-4"
                 >
-                  {card.title}
+                  <div className="">{card.title}</div>
                 </div>
               ))}
+              <AddListForm
+                onAddList={(title) => handleAddList(list.id, title)}
+              />
             </div>
           </div>
         ))}
 
-        {/* Add new list */}
-        <button className="bg-blue-600 text-white px-4 py-2 rounded h-fit">
-          + Add List
-        </button>
+        <AddNewCardForm onAddCard={handleAddCard} />
       </div>
     </div>
   );
