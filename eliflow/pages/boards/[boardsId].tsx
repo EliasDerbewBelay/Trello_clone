@@ -2,22 +2,23 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 
 type Card = { id: string; title: string };
-type List = { id: string; title: string; cards: Cards[] };
+type List = { id: string; title: string; cards: Card[] };
 
-const BoardPage: React.FC = () => {
+const BoardPage = () => {
   const router = useRouter();
   const { boardId } = router.query;
 
+  // Mock lists & cards
   const [lists, setLists] = useState<List[]>([
     {
       id: "1",
       title: "To Do",
-      cards: [{ id: "c1", title: "Set up Project repo" }],
+      cards: [{ id: "c1", title: "Set up project repo" }],
     },
     {
-      id: "c2",
+      id: "2",
       title: "In Progress",
-      cards: [{ id: "c2", title: "Build board ui" }],
+      cards: [{ id: "c2", title: "Build board UI" }],
     },
     {
       id: "3",
@@ -27,22 +28,32 @@ const BoardPage: React.FC = () => {
   ]);
 
   return (
-    <div>
-      <h2>Board {boardId}</h2>
-      <div>
-        {lists.map((list, index) => (
-          <div key={index}>
-            <h3>{list.title}</h3>
-
-            <div>
-              {list.cards.map((card, index) => (
-                <div key={index}>{card.title}</div>
+    <div className="p-6 min-h-screen">
+      <h2 className="text-2xl font-bold mb-6">Board {boardId}</h2>
+      <div className="flex gap-6 overflow-x-auto">
+        {lists.map((list) => (
+          <div
+            key={list.id}
+            className="bg-gray-100 rounded p-4 w-64 flex-shrink-0"
+          >
+            <h3 className="font-semibold mb-3">{list.title}</h3>
+            <div className="space-y-2">
+              {list.cards.map((card) => (
+                <div
+                  key={card.id}
+                  className="bg-white p-3 rounded shadow hover:shadow-md cursor-pointer"
+                >
+                  {card.title}
+                </div>
               ))}
             </div>
           </div>
         ))}
 
-        <button>+ Add List</button>
+        {/* Add new list */}
+        <button className="bg-blue-600 text-white px-4 py-2 rounded h-fit">
+          + Add List
+        </button>
       </div>
     </div>
   );
