@@ -1,5 +1,6 @@
 import AddCardsForm from "@/components/Forms/AddCardsForm";
 import AddListsForm from "@/components/Forms/AddListsForm";
+import { FaDeleteLeft } from "react-icons/fa6";
 
 import { useRouter } from "next/router";
 import { useState } from "react";
@@ -55,6 +56,16 @@ const BoardPage: React.FC = () => {
     );
   };
 
+  const handleDeleteCard = (listId: string, cardId: string) => {
+    setLists((prevList) =>
+      prevList.map((list) =>
+        list.id === listId
+          ? { ...list, cards: list.cards.filter((card) => card.id !== cardId) }
+          : list
+      )
+    );
+  };
+
   return (
     <div className="p-6 min-h-screen">
       <h2 className="text-2xl font-bold mb-6">Board {boardId}</h2>
@@ -71,7 +82,15 @@ const BoardPage: React.FC = () => {
                   key={card.id}
                   className="bg-white p-3 rounded shadow hover:shadow-md cursor-pointer flex flex-col gap-4"
                 >
-                  <div className="">{card.title}</div>
+                  <div className="flex justify-between items-center">
+                    <h3>{card.title}</h3>
+                    <button onClick={() => handleDeleteCard(list.id, card.id)}>
+                      <FaDeleteLeft
+                        size={20}
+                        className="cursor-pointer hover:shadow-lg"
+                      />
+                    </button>
+                  </div>
                 </div>
               ))}
               <AddCardsForm
