@@ -1,5 +1,5 @@
-import AddNewCardForm from "@/components/Forms/AddNewCardForm";
-import AddListForm from "@/components/Forms/AddListForm";
+import AddCardsForm from "@/components/Forms/AddCardsForm";
+import AddListsForm from "@/components/Forms/AddListsForm";
 
 import { useRouter } from "next/router";
 import { useState } from "react";
@@ -29,7 +29,7 @@ const BoardPage: React.FC = () => {
     },
   ]);
 
-  const handleAddCard = (title: string) => {
+  const handleAddList = (title: string) => {
     const newList: List = {
       id: Date.now().toString(),
       title,
@@ -39,7 +39,7 @@ const BoardPage: React.FC = () => {
     setLists([...lists, newList]);
   };
 
-  const handleAddList = (listId: string, cardTitle: string) => {
+  const handleAddCard = (listId: string, cardTitle: string) => {
     setLists((prevLists) =>
       prevLists.map((list) =>
         list.id === listId
@@ -74,14 +74,14 @@ const BoardPage: React.FC = () => {
                   <div className="">{card.title}</div>
                 </div>
               ))}
-              <AddListForm
-                onAddList={(title) => handleAddList(list.id, title)}
+              <AddCardsForm
+                onAddCard={(title) => handleAddCard(list.id, title)}
               />
             </div>
           </div>
         ))}
 
-        <AddNewCardForm onAddCard={handleAddCard} />
+        <AddListsForm onAddList={handleAddList} />
       </div>
     </div>
   );

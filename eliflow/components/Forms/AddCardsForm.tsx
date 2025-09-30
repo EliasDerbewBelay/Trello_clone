@@ -1,7 +1,7 @@
-import { useState } from "react";
 import { AddCardFormProps } from "@/interfaces";
+import { useState } from "react";
 
-const AddNewCardForm: React.FC<AddCardFormProps> = ({ onAddCard }) => {
+const AddCardsForm: React.FC<AddCardFormProps> = ({ onAddCard }) => {
   const [cardTitle, setCardTitle] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -15,20 +15,23 @@ const AddNewCardForm: React.FC<AddCardFormProps> = ({ onAddCard }) => {
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-col gap-4 bg-gray-100 shadow p-4 rounded-sm max-h-[8rem]"
+      className="bg-white rounded-lg shadow-lg px-3 py-4 flex flex-col gap-2 "
     >
       <input
         type="text"
-        placeholder="Add New List ..."
+        placeholder="new card ..."
         value={cardTitle}
         onChange={(e) => setCardTitle(e.target.value)}
-        className="border px-4 py-1 rounded-sm"
+        className="border px-3 py-1 rounded-sm"
       />
-      <button type="submit" className="bg-blue-500 py-2 rounded-sm cursor-pointer hover:shadow-lg text-white text-xl">
-        + Add{" "}
+      <button
+        type="submit"
+        className="bg-green-500 text-white py-1 rounded-sm shadow-md hover:shadow-lg cursor-pointer"
+      >
+        + Add
       </button>
     </form>
   );
 };
 
-export default AddNewCardForm;
+export default AddCardsForm;

@@ -1,11 +1,13 @@
-import { AddListFormProps } from "@/interfaces";
 import { useState } from "react";
+import { AddListFormProps } from "@/interfaces";
 
-const AddListForm: React.FC<AddListFormProps> = ({ onAddList }) => {
+const AddListsForm: React.FC<AddListFormProps> = ({ onAddList }) => {
   const [listTitle, setListTitle] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!listTitle.trim()) return;
     onAddList(listTitle);
     setListTitle("");
   };
@@ -13,23 +15,23 @@ const AddListForm: React.FC<AddListFormProps> = ({ onAddList }) => {
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-white rounded-lg shadow-lg px-3 py-4 flex flex-col gap-2 "
+      className="flex flex-col gap-4 bg-gray-100 shadow p-4 rounded-sm max-h-[8rem]"
     >
       <input
         type="text"
-        placeholder="new card ..."
+        placeholder="Add New List ..."
         value={listTitle}
         onChange={(e) => setListTitle(e.target.value)}
-        className="border px-3 py-1 rounded-sm"
+        className="border px-4 py-1 rounded-sm"
       />
       <button
         type="submit"
-        className="bg-green-500 text-white py-1 rounded-sm shadow-md hover:shadow-lg cursor-pointer"
+        className="bg-blue-500 py-2 rounded-sm cursor-pointer hover:shadow-lg text-white text-xl"
       >
-        + Add
+        + Add{" "}
       </button>
     </form>
   );
 };
 
-export default AddListForm;
+export default AddListsForm;
