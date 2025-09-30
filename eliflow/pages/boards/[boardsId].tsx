@@ -4,38 +4,57 @@ import { FaDeleteLeft } from "react-icons/fa6";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
 import { useRouter } from "next/router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type Card = { id: string; title: string };
 type List = { id: string; title: string; cards: Card[] };
+
+const STORAGE_KEY = "trello_clone_lists";
 
 const BoardPage: React.FC = () => {
   const router = useRouter();
   const { boardId } = router.query;
 
-  const [lists, setLists] = useState<List[]>([
-    {
-      id: "1",
-      title: "To Do",
-      cards: [{ id: "c1", title: "Set up project repo" }],
-    },
-    {
-      id: "2",
-      title: "In Progress",
-      cards: [{ id: "c2", title: "Build board UI" }],
-    },
-    {
-      id: "3",
-      title: "Done",
-      cards: [{ id: "c3", title: "Choose project name" }],
-    },
-  ]);
+  const [lists, setLists] = useState<List[]>([]);
+
+  // ✅ Load from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      setLists(JSON.parse(saved));
+    } else {
+      // fallback mock data if nothing saved
+      setLists([
+        {
+          id: "1",
+          title: "To Do",
+          cards: [{ id: "c1", title: "Set up project repo" }],
+        },
+        {
+          id: "2",
+          title: "In Progress",
+          cards: [{ id: "c2", title: "Build board UI" }],
+        },
+        {
+          id: "3",
+          title: "Done",
+          cards: [{ id: "c3", title: "Choose project name" }],
+        },
+      ]);
+    }
+  }, []);
+
+  // ✅ Save to localStorage whenever lists change
+  useEffect(() => {
+    if (lists.length > 0) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(lists));
+    }
+  }, [lists]);
 
   const onDragEnd = (result: any) => {
     const { source, destination, type } = result;
     if (!destination) return;
 
-    // --- Reorder whole lists ---
     if (type === "LIST") {
       const newLists = Array.from(lists);
       const [movedList] = newLists.splice(source.index, 1);
@@ -44,7 +63,6 @@ const BoardPage: React.FC = () => {
       return;
     }
 
-    // --- Reorder cards in same list ---
     if (source.droppableId === destination.droppableId) {
       const listIndex = lists.findIndex((i) => i.id === source.droppableId);
       const newCards = Array.from(lists[listIndex].cards);
@@ -55,7 +73,6 @@ const BoardPage: React.FC = () => {
       newLists[listIndex].cards = newCards;
       setLists(newLists);
     } else {
-      // --- Move cards between lists ---
       const sourceListIndex = lists.findIndex(
         (i) => i.id === source.droppableId
       );
@@ -120,7 +137,6 @@ const BoardPage: React.FC = () => {
       <DragDropContext onDragEnd={onDragEnd}>
         <h2 className="text-2xl font-bold mb-6">Board {boardId}</h2>
 
-        {/* Outer Droppable for Lists */}
         <Droppable droppableId="board" direction="horizontal" type="LIST">
           {(provided) => (
             <div
@@ -140,7 +156,6 @@ const BoardPage: React.FC = () => {
                       ref={provided.innerRef}
                       {...provided.draggableProps}
                     >
-                      {/* drag handle for moving lists */}
                       <div
                         className="flex items-center justify-between mb-3 cursor-grab"
                         {...provided.dragHandleProps}
@@ -154,7 +169,6 @@ const BoardPage: React.FC = () => {
                         </button>
                       </div>
 
-                      {/* Cards Droppable */}
                       <Droppable droppableId={list.id} type="CARD">
                         {(provided) => (
                           <div
