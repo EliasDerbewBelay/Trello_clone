@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 type Card = { id: string; title: string };
 type List = { id: string; title: string; cards: Card[] };
 
-const STORAGE_KEY = "trello_clone_lists";
+const getStorageKey = (boardId: string) => `trello_clone_board_${boardId}`;
 
 const BoardPage: React.FC = () => {
   const router = useRouter();
@@ -17,13 +17,14 @@ const BoardPage: React.FC = () => {
 
   const [lists, setLists] = useState<List[]>([]);
 
-  // ✅ Load from localStorage
+  // ✅ Load from localStorage for this board
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
+    if (!boardId) return;
+    const saved = localStorage.getItem(getStorageKey(boardId as string));
     if (saved) {
       setLists(JSON.parse(saved));
     } else {
-      // fallback mock data if nothing saved
+      // fallback initial data
       setLists([
         {
           id: "1",
@@ -42,14 +43,17 @@ const BoardPage: React.FC = () => {
         },
       ]);
     }
-  }, []);
+  }, [boardId]);
 
-  // ✅ Save to localStorage whenever lists change
+  // ✅ Save changes to localStorage for this board
   useEffect(() => {
-    if (lists.length > 0) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(lists));
+    if (boardId && lists.length > 0) {
+      localStorage.setItem(
+        getStorageKey(boardId as string),
+        JSON.stringify(lists)
+      );
     }
-  }, [lists]);
+  }, [lists, boardId]);
 
   const onDragEnd = (result: any) => {
     const { source, destination, type } = result;
