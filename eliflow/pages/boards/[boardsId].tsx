@@ -32,9 +32,19 @@ const BoardPage: React.FC = () => {
   ]);
 
   const onDragEnd = (result: any) => {
-    const { source, destination } = result;
+    const { source, destination, type } = result;
     if (!destination) return;
 
+    // --- Reorder whole lists ---
+    if (type === "LIST") {
+      const newLists = Array.from(lists);
+      const [movedList] = newLists.splice(source.index, 1);
+      newLists.splice(destination.index, 0, movedList);
+      setLists(newLists);
+      return;
+    }
+
+    // --- Reorder cards in same list ---
     if (source.droppableId === destination.droppableId) {
       const listIndex = lists.findIndex((i) => i.id === source.droppableId);
       const newCards = Array.from(lists[listIndex].cards);
@@ -45,6 +55,7 @@ const BoardPage: React.FC = () => {
       newLists[listIndex].cards = newCards;
       setLists(newLists);
     } else {
+      // --- Move cards between lists ---
       const sourceListIndex = lists.findIndex(
         (i) => i.id === source.droppableId
       );
@@ -107,67 +118,98 @@ const BoardPage: React.FC = () => {
   return (
     <div className="p-6 min-h-screen">
       <DragDropContext onDragEnd={onDragEnd}>
-
         <h2 className="text-2xl font-bold mb-6">Board {boardId}</h2>
-        <div className="flex gap-6 overflow-x-auto">
-          {lists.map((list) => (
-            <Droppable droppableId={list.id} key={list.id}>
-              {(provided) => (
-                <div
-                  className="bg-gray-100 rounded p-4 w-64 flex-shrink-0"
-                  ref={provided.innerRef}
-                  {...provided.droppableProps}
-                >
-                  <div className="flex items-center justify-between mb-3 gap-5">
-                    <h3 className="font-semibold">{list.title}</h3>
-                    <button
-                      className="cursor-pointer font-bold text-xl hover:text-red-500 active:text-red-700"
-                      onClick={() => handleDeleteList(list.id)}
-                    >
-                      ✕
-                    </button>
-                  </div>
 
-                  <div className="space-y-2">
-                    {list.cards.map((card, index) => (
-                      <Draggable
-                        key={card.id}
-                        draggableId={card.id}
-                        index={index}
+        {/* Outer Droppable for Lists */}
+        <Droppable droppableId="board" direction="horizontal" type="LIST">
+          {(provided) => (
+            <div
+              className="flex gap-6 overflow-x-auto"
+              ref={provided.innerRef}
+              {...provided.droppableProps}
+            >
+              {lists.map((list, listIndex) => (
+                <Draggable
+                  draggableId={list.id}
+                  index={listIndex}
+                  key={list.id}
+                >
+                  {(provided) => (
+                    <div
+                      className="bg-gray-100 rounded p-4 w-64 flex-shrink-0"
+                      ref={provided.innerRef}
+                      {...provided.draggableProps}
+                    >
+                      {/* drag handle for moving lists */}
+                      <div
+                        className="flex items-center justify-between mb-3 cursor-grab"
+                        {...provided.dragHandleProps}
                       >
+                        <h3 className="font-semibold">{list.title}</h3>
+                        <button
+                          className="cursor-pointer font-bold text-xl hover:text-red-500 active:text-red-700"
+                          onClick={() => handleDeleteList(list.id)}
+                        >
+                          ✕
+                        </button>
+                      </div>
+
+                      {/* Cards Droppable */}
+                      <Droppable droppableId={list.id} type="CARD">
                         {(provided) => (
                           <div
-                            className="bg-white p-3 rounded shadow hover:shadow-md cursor-pointer flex justify-between items-center gap-2"
+                            className="space-y-2"
                             ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
+                            {...provided.droppableProps}
                           >
-                            <h3>{card.title}</h3>
-                            <button
-                              onClick={() => handleDeleteCard(list.id, card.id)}
-                            >
-                              <FaDeleteLeft
-                                size={20}
-                                className="cursor-pointer hover:shadow-lg"
-                              />
-                            </button>
+                            {list.cards.map((card, cardIndex) => (
+                              <Draggable
+                                key={card.id}
+                                draggableId={card.id}
+                                index={cardIndex}
+                              >
+                                {(provided) => (
+                                  <div
+                                    className="bg-white p-3 rounded shadow hover:shadow-md cursor-pointer flex justify-between items-center"
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    {...provided.dragHandleProps}
+                                  >
+                                    <h3>{card.title}</h3>
+                                    <button
+                                      onClick={() =>
+                                        handleDeleteCard(list.id, card.id)
+                                      }
+                                    >
+                                      <FaDeleteLeft
+                                        size={20}
+                                        className="cursor-pointer hover:shadow-lg"
+                                      />
+                                    </button>
+                                  </div>
+                                )}
+                              </Draggable>
+                            ))}
+                            {provided.placeholder}
+
+                            <AddCardsForm
+                              onAddCard={(title) =>
+                                handleAddCard(list.id, title)
+                              }
+                            />
                           </div>
                         )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
+                      </Droppable>
+                    </div>
+                  )}
+                </Draggable>
+              ))}
+              {provided.placeholder}
 
-                    <AddCardsForm
-                      onAddCard={(title) => handleAddCard(list.id, title)}
-                    />
-                  </div>
-                </div>
-              )}
-            </Droppable>
-          ))}
-
-          <AddListsForm onAddList={handleAddList} />
-        </div>
+              <AddListsForm onAddList={handleAddList} />
+            </div>
+          )}
+        </Droppable>
       </DragDropContext>
     </div>
   );
