@@ -1,6 +1,7 @@
 import AddCardsForm from "@/components/Forms/AddCardsForm";
 import AddListsForm from "@/components/Forms/AddListsForm";
 import { FaDeleteLeft } from "react-icons/fa6";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
 import { useRouter } from "next/router";
 import { useState } from "react";
@@ -30,13 +31,46 @@ const BoardPage: React.FC = () => {
     },
   ]);
 
+  const onDragEnd = (result: any) => {
+    const { source, destination } = result;
+    if (!destination) return;
+
+    if (source.droppableId === destination.droppableId) {
+      const listIndex = lists.findIndex((i) => i.id === source.droppableId);
+      const newCards = Array.from(lists[listIndex].cards);
+      const [moved] = newCards.splice(source.index, 1);
+      newCards.splice(destination.index, 0, moved);
+
+      const newLists = [...lists];
+      newLists[listIndex].cards = newCards;
+      setLists(newLists);
+    } else {
+      const sourceListIndex = lists.findIndex(
+        (i) => i.id === source.droppableId
+      );
+      const destListIndex = lists.findIndex(
+        (i) => i.id === destination.droppableId
+      );
+
+      const sourceCards = Array.from(lists[sourceListIndex].cards);
+      const destCards = Array.from(lists[destListIndex].cards);
+
+      const [moved] = sourceCards.splice(source.index, 1);
+      destCards.splice(destination.index, 0, moved);
+
+      const newLists = [...lists];
+      newLists[sourceListIndex].cards = sourceCards;
+      newLists[destListIndex].cards = destCards;
+      setLists(newLists);
+    }
+  };
+
   const handleAddList = (title: string) => {
     const newList: List = {
       id: Date.now().toString(),
       title,
       cards: [],
     };
-
     setLists([...lists, newList]);
   };
 
@@ -66,42 +100,75 @@ const BoardPage: React.FC = () => {
     );
   };
 
+  const handleDeleteList = (listId: string) => {
+    setLists((prevLists) => prevLists.filter((list) => list.id !== listId));
+  };
+
   return (
     <div className="p-6 min-h-screen">
-      <h2 className="text-2xl font-bold mb-6">Board {boardId}</h2>
-      <div className="flex gap-6 overflow-x-auto">
-        {lists.map((list) => (
-          <div
-            key={list.id}
-            className="bg-gray-100 rounded p-4 w-64 flex-shrink-0"
-          >
-            <h3 className="font-semibold mb-3">{list.title}</h3>
-            <div className="space-y-2">
-              {list.cards.map((card) => (
+      <DragDropContext onDragEnd={onDragEnd}>
+
+        <h2 className="text-2xl font-bold mb-6">Board {boardId}</h2>
+        <div className="flex gap-6 overflow-x-auto">
+          {lists.map((list) => (
+            <Droppable droppableId={list.id} key={list.id}>
+              {(provided) => (
                 <div
-                  key={card.id}
-                  className="bg-white p-3 rounded shadow hover:shadow-md cursor-pointer flex flex-col gap-4"
+                  className="bg-gray-100 rounded p-4 w-64 flex-shrink-0"
+                  ref={provided.innerRef}
+                  {...provided.droppableProps}
                 >
-                  <div className="flex justify-between items-center">
-                    <h3>{card.title}</h3>
-                    <button onClick={() => handleDeleteCard(list.id, card.id)}>
-                      <FaDeleteLeft
-                        size={20}
-                        className="cursor-pointer hover:shadow-lg"
-                      />
+                  <div className="flex items-center justify-between mb-3 gap-5">
+                    <h3 className="font-semibold">{list.title}</h3>
+                    <button
+                      className="cursor-pointer font-bold text-xl hover:text-red-500 active:text-red-700"
+                      onClick={() => handleDeleteList(list.id)}
+                    >
+                      ✕
                     </button>
                   </div>
-                </div>
-              ))}
-              <AddCardsForm
-                onAddCard={(title) => handleAddCard(list.id, title)}
-              />
-            </div>
-          </div>
-        ))}
 
-        <AddListsForm onAddList={handleAddList} />
-      </div>
+                  <div className="space-y-2">
+                    {list.cards.map((card, index) => (
+                      <Draggable
+                        key={card.id}
+                        draggableId={card.id}
+                        index={index}
+                      >
+                        {(provided) => (
+                          <div
+                            className="bg-white p-3 rounded shadow hover:shadow-md cursor-pointer flex justify-between items-center gap-2"
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                          >
+                            <h3>{card.title}</h3>
+                            <button
+                              onClick={() => handleDeleteCard(list.id, card.id)}
+                            >
+                              <FaDeleteLeft
+                                size={20}
+                                className="cursor-pointer hover:shadow-lg"
+                              />
+                            </button>
+                          </div>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+
+                    <AddCardsForm
+                      onAddCard={(title) => handleAddCard(list.id, title)}
+                    />
+                  </div>
+                </div>
+              )}
+            </Droppable>
+          ))}
+
+          <AddListsForm onAddList={handleAddList} />
+        </div>
+      </DragDropContext>
     </div>
   );
 };
