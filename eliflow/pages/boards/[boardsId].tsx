@@ -17,10 +17,11 @@ const BoardPage: React.FC = () => {
 
   const [lists, setLists] = useState<List[]>([]);
 
-  // ✅ Load from localStorage for this board
+  // ✅ Load board data from localStorage
   useEffect(() => {
-    if (!boardId) return;
-    const saved = localStorage.getItem(getStorageKey(boardId as string));
+    if (typeof boardId !== "string") return; // wait until router is ready
+
+    const saved = localStorage.getItem(getStorageKey(boardId));
     if (saved) {
       setLists(JSON.parse(saved));
     } else {
@@ -45,16 +46,43 @@ const BoardPage: React.FC = () => {
     }
   }, [boardId]);
 
-  // ✅ Save changes to localStorage for this board
+  // ✅ Save board data + sync metadata
   useEffect(() => {
-    if (boardId && lists.length > 0) {
+    if (typeof boardId !== "string") return;
+
+    // Save lists/cards for this board
+    localStorage.setItem(getStorageKey(boardId), JSON.stringify(lists));
+
+    // Update board metadata in "trello_clone_boards"
+    const savedBoards = localStorage.getItem("trello_clone_boards");
+    if (savedBoards) {
+      const boards = JSON.parse(savedBoards);
+
+      const listsCount = lists.length;
+      const cardsCount = lists.reduce(
+        (sum, list) => sum + list.cards.length,
+        0
+      );
+
+      const updatedBoards = boards.map((board: any) =>
+        board.id === boardId
+          ? {
+              ...board,
+              listsCount,
+              cardsCount,
+              updatedAt: new Date().toISOString(),
+            }
+          : board
+      );
+
       localStorage.setItem(
-        getStorageKey(boardId as string),
-        JSON.stringify(lists)
+        "trello_clone_boards",
+        JSON.stringify(updatedBoards)
       );
     }
   }, [lists, boardId]);
 
+  // Drag & Drop handler
   const onDragEnd = (result: any) => {
     const { source, destination, type } = result;
     if (!destination) return;
@@ -97,6 +125,7 @@ const BoardPage: React.FC = () => {
     }
   };
 
+  // Handlers for Add / Delete
   const handleAddList = (title: string) => {
     const newList: List = {
       id: Date.now().toString(),
